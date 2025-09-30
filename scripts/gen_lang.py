@@ -43,7 +43,11 @@ def load_base_language(assets_dir):
     else:
         print("Warning: en-US base language file not found, fallback mechanism disabled")
     return {'strings': {}}
-
+def get_files_with_ext(directory, ext):
+    """获取目录中指定扩展的文件列表"""
+    if not os.path.exists(directory):
+        return []
+    return [f for f in os.listdir(directory) if f.endswith(ext)]
 def get_sound_files(directory):
     """获取目录中的音效文件列表"""
     if not os.path.exists(directory):
@@ -159,6 +163,21 @@ def generate_header(lang_code, output_path):
         static_cast<const char*>(ogg_{base_name}_start),
         static_cast<size_t>(ogg_{base_name}_end - ogg_{base_name}_start)
         }};''')
+
+
+    common_p3 = get_files_with_ext(common_dir, '.p3')
+    print(f"  - Common P3: {len(common_p3)} files")    
+
+    # 公共 P3
+    for file in sorted(common_p3):
+        base_name = os.path.splitext(file)[0]
+        sounds.append(f'''
+        extern const char p3_{base_name}_start[] asm("_binary_{base_name}_p3_start");
+        extern const char p3_{base_name}_end[] asm("_binary_{base_name}_p3_end");
+        static const std::string_view P3_{base_name.upper()} {{
+        static_cast<const char*>(p3_{base_name}_start),
+        static_cast<size_t>(p3_{base_name}_end - p3_{base_name}_start)
+        }};''')    
 
     # 填充模板
     content = HEADER_TEMPLATE.format(

@@ -1,0 +1,48 @@
+#ifndef _BOARD_CONFIG_H_
+#define _BOARD_CONFIG_H_
+
+#include <driver/gpio.h>
+
+#define AUDIO_INPUT_SAMPLE_RATE  24000
+#define AUDIO_OUTPUT_SAMPLE_RATE 24000
+
+#define AUDIO_I2S_GPIO_MCLK GPIO_NUM_40  // I2S主时钟引脚
+#define AUDIO_I2S_GPIO_WS GPIO_NUM_47  // I2S字选择(左右声道选择)引脚
+#define AUDIO_I2S_GPIO_BCLK GPIO_NUM_38  // I2S位时钟引脚
+#define AUDIO_I2S_GPIO_DIN  GPIO_NUM_5   // I2S数据输入引脚
+#define AUDIO_I2S_GPIO_DOUT GPIO_NUM_48  // I2S数据输出引脚
+
+#define AUDIO_CODEC_PA_PIN       GPIO_NUM_9      // 功率放大器控制引脚
+#define AUDIO_CODEC_I2C_SDA_PIN  GPIO_NUM_42     // I2C数据线引脚
+#define AUDIO_CODEC_I2C_SCL_PIN  GPIO_NUM_41     // I2C时钟线引脚
+#define AUDIO_CODEC_ES8311_ADDR  ES8311_CODEC_DEFAULT_ADDR
+
+#define BUILTIN_LED_GPIO        GPIO_NUM_3
+#define BOOT_BUTTON_GPIO        GPIO_NUM_0
+#define TOUCH_BUTTON_GPIO       GPIO_NUM_NC
+#define VOLUME_UP_BUTTON_GPIO   GPIO_NUM_NC
+#define VOLUME_DOWN_BUTTON_GPIO GPIO_NUM_NC
+
+//#define DISPLAY_SDA_PIN GPIO_NUM_7
+//#define DISPLAY_SCL_PIN GPIO_NUM_8
+#define DISPLAY_WIDTH   128
+
+#if CONFIG_OLED_SSD1306_128X32
+#define DISPLAY_HEIGHT  32
+#elif CONFIG_OLED_SSD1306_128X64
+#define DISPLAY_HEIGHT  64
+#elif CONFIG_OLED_SH1106_128X64
+#define DISPLAY_HEIGHT  64
+#define SH1106
+#else
+#error "未选择 OLED 屏幕类型"
+#endif
+
+#define DISPLAY_MIRROR_X true
+#define DISPLAY_MIRROR_Y true
+
+
+// A MCP Test: Control a lamp
+#define LAMP_GPIO GPIO_NUM_18
+
+#endif // _BOARD_CONFIG_H_

@@ -16,7 +16,7 @@
 #include <arpa/inet.h>
 
 #define TAG "Application"
-
+#include "yt_uart.h"
 
 static const char* const STATE_STRINGS[] = {
     "unknown",
@@ -245,6 +245,12 @@ void Application::ToggleChatState() {
         return;
     }
 
+    if(ytUart::instance().get_ble_status() == true)
+    {
+        ESP_LOGI(TAG, "蓝牙连接中，忽略按键操作");
+        return;
+    }
+
     if (device_state_ == kDeviceStateIdle) {
         Schedule([this]() {
             if (!protocol_->IsAudioChannelOpened()) {
@@ -368,6 +374,11 @@ void Application::Start() {
 
     // Add MCP common tools before initializing the protocol
     McpServer::GetInstance().AddCommonTools();
+
+    auto& ytUart_instance = ytUart::instance();
+    if(!ytUart_instance.is_initialized()){
+        ESP_LOGW(TAG, "YT228 UART 初始化失败");
+    }
 
     if (ota.HasMqttConfig()) {
         protocol_ = std::make_unique<MqttProtocol>();
@@ -507,6 +518,59 @@ void Application::Start() {
     // Print heap stats
     SystemInfo::PrintHeapStats();
 }
+
+
+void Application::ForceIdle() {
+    Schedule([this]() {
+        // 没协议也直接置 Idle
+        if (!protocol_) {
+            SetDeviceState(kDeviceStateIdle);
+            audio_service_.EnableVoiceProcessing(false);
+            return;
+        }
+
+        bool need_close_channel = protocol_->IsAudioChannelOpened();
+
+        if (device_state_ == kDeviceStateListening) {
+            protocol_->SendStopListening();
+            audio_service_.EnableVoiceProcessing(false);
+            SetDeviceState(kDeviceStateIdle);
+        } else if (device_state_ == kDeviceStateSpeaking) {
+            protocol_->SendAbortSpeaking(kAbortReasonNone);
+            audio_service_.ResetDecoder();
+            audio_service_.EnableVoiceProcessing(false);
+            SetDeviceState(kDeviceStateIdle);
+        } else {
+            // 其他状态不强制
+            return;
+        }
+
+        // 若通道还开着，主动关闭
+        if (need_close_channel && protocol_->IsAudioChannelOpened()) {
+            protocol_->CloseAudioChannel();
+        }
+    });
+}
+
+// 新增：统一入口SPKING 进入 Listening
+void Application::EnterListeningState() {
+    Schedule([this]() {
+        if (!protocol_) {
+            ESP_LOGE(TAG, "Protocol not initialized");
+            return;
+        }
+
+       if (device_state_ == kDeviceStateSpeaking) {
+           Schedule([this]() {
+               AbortSpeaking(kAbortReasonNone);
+           });
+       }
+   });
+}
+
+
+
+
 
 void Application::OnClockTimer() {
     clock_ticks_++;
@@ -715,6 +779,60 @@ void Application::WakeWordInvoke(const std::string& wake_word) {
         });
     }
 }
+
+
+
+void Application::WakeWordInvokeByUart(const std::string& wake_word) {
+     if (device_state_ == kDeviceStateIdle) {
+        Schedule([this]() {
+            if (!protocol_->IsAudioChannelOpened()) {
+                SetDeviceState(kDeviceStateConnecting);
+                if (!protocol_->OpenAudioChannel()) {
+                    return;
+                }
+            }
+            
+
+            const std::string_view& sound = Lang::Sounds::P3_NIHAO;
+            const char* data = sound.data();
+            size_t size = sound.size();
+            for (const char* p = data; p < data + size; ) {
+                auto p3 = (BinaryProtocol3*)p;
+                p += sizeof(BinaryProtocol3);
+
+                auto payload_size = ntohs(p3->payload_size);
+                auto packet = std::make_unique<AudioStreamPacket>();
+                packet->sample_rate = 16000;
+                packet->frame_duration = 60;
+                packet->payload.resize(payload_size);
+                memcpy(packet->payload.data(), p3->payload, payload_size);
+                p += payload_size;
+                protocol_->SendAudio(std::move(packet));
+            }
+
+            // if (protocol_) {
+            //     protocol_->SendWakeWordDetected("你好"); 
+            // }
+
+            SetListeningMode(aec_mode_ == kAecOff ? kListeningModeAutoStop : kListeningModeRealtime);
+        });
+
+        Schedule([this, wake_word]() {
+            if (protocol_) {
+                protocol_->SendWakeWordDetected(wake_word); 
+            }
+        });
+
+    } else if (device_state_ == kDeviceStateSpeaking) {
+        Schedule([this]() {
+            AbortSpeaking(kAbortReasonNone);
+        });
+    } else if (device_state_ == kDeviceStateListening) {   
+    }
+}
+
+
+
 
 bool Application::CanEnterSleepMode() {
     if (device_state_ != kDeviceStateIdle) {

@@ -61,6 +61,13 @@ public:
     void PlaySound(const std::string_view& sound);
     AudioService& GetAudioService() { return audio_service_; }
 
+        // 新增：强制从 Listening / Speaking 进入 Idle
+    void ForceIdle();
+    // 新增：主动进入 Listening 状态（自动根据 AEC 模式选择模式）
+    void EnterListeningState();
+    //Uart 离线唤醒
+    void WakeWordInvokeByUart(const std::string& wake_word);
+
 private:
     Application();
     ~Application();
