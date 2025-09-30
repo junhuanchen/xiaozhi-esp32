@@ -336,6 +336,28 @@ add_custom_target(lang_header ALL
     DEPENDS ${LANG_HEADER}
 )
 
+if(CONFIG_BOARD_TYPE_LICHUANG_C3_DEV)
+    # 使用本地资源目录
+    set(SPIFFS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets/aaf")
+
+    # 可选：列出一下找到了哪些文件，便于调试
+    file(GLOB LOCAL_AAF_FILES ${SPIFFS_DIR}/*.aaf)
+    if(NOT LOCAL_AAF_FILES)
+        message(FATAL_ERROR "未找到任何 .aaf 文件：${SPIFFS_DIR}，请先放入资源。")
+    else()
+        message(STATUS "将打包本地 AAF 资源: ${LOCAL_AAF_FILES}")
+    endif()
+
+    spiffs_create_partition_assets(
+        assets_A
+        ${SPIFFS_DIR}
+        FLASH_IN_PROJECT
+        MMAP_FILE_SUPPORT_FORMAT ".aaf"
+    )
+endif()
+
+
+
 if(CONFIG_BOARD_TYPE_ESP_HI)
 set(URL "https://github.com/espressif2022/image_player/raw/main/test_apps/test_8bit")
 set(SPIFFS_DIR "${CMAKE_BINARY_DIR}/emoji")

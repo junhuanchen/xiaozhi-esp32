@@ -5,12 +5,15 @@
 #include "button.h"
 #include "config.h"
 #include "i2c_device.h"
+#include "emoji_display.h" 
 
 #include <esp_log.h>
 #include <esp_lcd_panel_vendor.h>
 #include <driver/i2c_master.h>
 #include <driver/spi_common.h>
 #include <wifi_station.h>
+
+
 
 #define TAG "LichuangC3DevBoard"
 
@@ -21,7 +24,7 @@ class LichuangC3DevBoard : public WifiBoard {
 private:
     i2c_master_bus_handle_t codec_i2c_bus_;
     Button boot_button_;
-    LcdDisplay* display_;
+    anim::EmojiWidget* display_ = nullptr;
 
     void InitializeI2c() {
         // Initialize I2C peripheral
@@ -85,18 +88,25 @@ private:
         ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(panel_io, &panel_config, &panel));
         
         esp_lcd_panel_reset(panel);
-
         esp_lcd_panel_init(panel);
         esp_lcd_panel_invert_color(panel, true);
         esp_lcd_panel_swap_xy(panel, DISPLAY_SWAP_XY);
         esp_lcd_panel_mirror(panel, DISPLAY_MIRROR_X, DISPLAY_MIRROR_Y);
-        display_ = new SpiLcdDisplay(panel_io, panel,
-                                    DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_OFFSET_X, DISPLAY_OFFSET_Y, DISPLAY_MIRROR_X, DISPLAY_MIRROR_Y, DISPLAY_SWAP_XY,
-                                    {
-                                        .text_font = &font_puhui_16_4,
-                                        .icon_font = &font_awesome_16_4,
-                                        .emoji_font = font_emoji_32_init(),
-                                    });
+        #if defined(DISPLAY_OFFSET_X) && defined(DISPLAY_OFFSET_Y)
+            if (DISPLAY_OFFSET_X || DISPLAY_OFFSET_Y) {
+                esp_lcd_panel_set_gap(panel, DISPLAY_OFFSET_X, DISPLAY_OFFSET_Y);
+            }
+        #endif
+        // display_ = new ElectronEmojiDisplay(panel_io, panel,
+        //                             DISPLAY_WIDTH, DISPLAY_HEIGHT, DISPLAY_OFFSET_X, DISPLAY_OFFSET_Y, DISPLAY_MIRROR_X, DISPLAY_MIRROR_Y, DISPLAY_SWAP_XY,
+        //                             {
+        //                                 .text_font = &font_puhui_16_4,
+        //                                 .icon_font = &font_awesome_16_4,
+        //                                 .emoji_font = font_emoji_64_init(),
+        //                             });
+        esp_lcd_panel_disp_on_off(panel, true);
+        display_ = new anim::EmojiWidget(panel, panel_io);
+        ESP_LOGI(TAG, "EmojiWidget created (panel=%p, io=%p)", panel, panel_io);
     }
 
 public:
@@ -105,7 +115,7 @@ public:
         InitializeSpi();
         InitializeSt7789Display();
         InitializeButtons();
-        GetBacklight()->SetBrightness(50);
+        GetBacklight()->SetBrightness(100);
 
     }
 
