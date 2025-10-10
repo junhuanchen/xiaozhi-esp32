@@ -221,6 +221,8 @@ elseif(CONFIG_BOARD_TYPE_SURFER_C3_1_14TFT)
     set(BOARD_TYPE "surfer-c3-1.14tft")
 elseif(CONFIG_BOARD_TYPE_WHKJ_S3_2228)
     set(BOARD_TYPE "whkj-s3-2228")
+elseif(CONFIG_BOARD_TYPE_TKR_C3)
+    set(BOARD_TYPE "tkr-c3-dev")
 endif()
 file(GLOB BOARD_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD_TYPE}/*.cc
@@ -336,7 +338,7 @@ add_custom_target(lang_header ALL
     DEPENDS ${LANG_HEADER}
 )
 
-if(CONFIG_BOARD_TYPE_LICHUANG_C3_DEV)
+if(CONFIG_BOARD_TYPE_TKR_C3)
     # 使用本地资源目录
     set(SPIFFS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets/aaf")
 

@@ -13,6 +13,10 @@
 #include "assets/lang_config.h"
 
 
+#include "system_reset.h"
+#include "wifi_board.h"
+
+
 static const char *TAG = "yt_uart";
 
 
@@ -259,13 +263,24 @@ void ytUart::spk_wakeword_study() {
 }
 
 void ytUart::spk_wakeword_clr() {
-    ESP_LOGI(TAG, "执行唤醒词清除动作...");
+   // ESP_LOGI(TAG, "执行唤醒词清除动作...");
+    ESP_LOGI(TAG, "按键唤醒...");
+      // TODO: 在这里放你唤醒时的业务逻辑
+    if(ble_opened == true)
+    {
+        Application::GetInstance().ForceIdle();
+        ESP_LOGI(TAG, "蓝牙连接中，忽略唤醒操作");
+        return;
+    }
+    std::string wake_word="你好";
+    Application::GetInstance().WakeWordInvokeByUart(wake_word); 
   
 }
 
 void ytUart::spk_study_stop() {
-    ESP_LOGI(TAG, "执行唤醒词学习停止动作...");
-
+   // ESP_LOGI(TAG, "执行唤醒词学习停止动作...");
+     ESP_LOGI(TAG, "执行配网动作...");
+     static_cast<WifiBoard*>(&Board::GetInstance())->ResetWifiConfiguration();
 }
 
 void ytUart::spk_study_success() {

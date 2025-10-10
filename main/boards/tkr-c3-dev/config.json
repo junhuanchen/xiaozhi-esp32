@@ -1,0 +1,14 @@
+{
+    "target": "esp32c3",
+    "builds": [
+        {
+            "name": "TKR-c3-dev",
+            "sdkconfig_append": [
+                "CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y",
+                "CONFIG_PARTITION_TABLE_CUSTOM_FILENAME=\"partitions/v1/8m_esp-hi.csv\"",
+                "CONFIG_USE_ESP_WAKE_WORD=n",
+                "CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y"
+            ]
+        }
+    ]
+}

@@ -48,7 +48,7 @@ void McpServer::AddCommonTools() {
     AddTool("self.audio_speaker.set_volume", 
         "Set the volume of the audio speaker. If the current volume is unknown, you must call `self.get_device_status` tool first and then call this tool.",
         PropertyList({
-            Property("volume", kPropertyTypeInteger, 0, 100)
+            Property("volume", kPropertyTypeInteger, 20, 100)
         }), 
         [&board](const PropertyList& properties) -> ReturnValue {
             auto codec = board.GetAudioCodec();
@@ -61,7 +61,7 @@ void McpServer::AddCommonTools() {
         AddTool("self.screen.set_brightness",
             "Set the brightness of the screen.",
             PropertyList({
-                Property("brightness", kPropertyTypeInteger, 0, 100)
+                Property("brightness", kPropertyTypeInteger, 5, 100)
             }),
             [backlight](const PropertyList& properties) -> ReturnValue {
                 uint8_t brightness = static_cast<uint8_t>(properties["brightness"].value<int>());

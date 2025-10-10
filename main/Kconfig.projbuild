@@ -346,6 +346,10 @@ choice BOARD_TYPE
     config BOARD_TYPE_WHKJ_S3_2228
         bool "文汇科技S3-2228"
         depends on IDF_TARGET_ESP32S3
+    config BOARD_TYPE_TKR_C3
+        bool "太空人C3-2228"
+        depends on IDF_TARGET_ESP32C3
+    
 endchoice
 
 choice ESP_S3_LCD_EV_Board_Version_TYPE
