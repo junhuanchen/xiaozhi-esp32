@@ -53,7 +53,7 @@ EmojiPlayer::EmojiPlayer(esp_lcd_panel_handle_t panel, esp_lcd_panel_io_handle_t
         .on_color_trans_done = OnFlushIoReady,
     };
     esp_lcd_panel_io_register_event_callbacks(panel_io, &cbs, player_handle_);
-    StartPlayer(MMAP_AAF_LOGO_AAF, true, 10);
+    StartPlayer(MMAP_AAF_LOGO_AAF, true, 0);
 }
 
 EmojiPlayer::~EmojiPlayer()

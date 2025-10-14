@@ -359,6 +359,13 @@ void Application::Start() {
     /* Start the clock timer to update the status bar */
     esp_timer_start_periodic(clock_timer_handle_, 1000000);
 
+
+    auto& ytUart_instance = ytUart::instance();
+    if(!ytUart_instance.is_initialized()){
+        ESP_LOGW(TAG, "YT228 UART 初始化失败");
+    }
+
+
     /* Wait for the network to be ready */
     board.StartNetwork();
 
@@ -375,10 +382,7 @@ void Application::Start() {
     // Add MCP common tools before initializing the protocol
     McpServer::GetInstance().AddCommonTools();
 
-    auto& ytUart_instance = ytUart::instance();
-    if(!ytUart_instance.is_initialized()){
-        ESP_LOGW(TAG, "YT228 UART 初始化失败");
-    }
+
 
     if (ota.HasMqttConfig()) {
         protocol_ = std::make_unique<MqttProtocol>();
